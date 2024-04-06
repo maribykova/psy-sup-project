@@ -59,4 +59,12 @@ create table "Comment" (
 	moderated bool                     -- отмодерирован?
 )
 ----------------------------------------------------------------------------
-
+create table "Worker" (
+	id SERIAL PRIMARY KEY,
+	phone text UNIQUE,       -- номер телефона 
+	email text,              -- почта 
+	username text UNIQUE,           
+    name text,
+	password text,
+	role as enum ('psychologist', 'moderator')
+)
