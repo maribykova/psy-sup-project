@@ -48,10 +48,8 @@ fun CreatePage(u : User) : Unit {
     var dialogOpen by remember { mutableStateOf(false) }
     val isPublic = remember { mutableStateOf(false) }
 
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .fillMaxHeight(0.92f),
+    Box (
+        modifier = Modifier.fillMaxWidth().fillMaxHeight(0.92f),
         contentAlignment = Alignment.TopCenter
     ){
         Column (
@@ -70,7 +68,7 @@ fun CreatePage(u : User) : Unit {
             )
             TextField(
                 value = text, onValueChange = { text = it },
-                label = { Text(text = "Твой пост", fontSize = 24.sp) },
+                label = { Text(text = "Ваш пост", fontSize = 24.sp) },
                 modifier = Modifier
                     .fillMaxWidth(0.9f)
                     .fillMaxHeight(0.7f),
@@ -84,7 +82,7 @@ fun CreatePage(u : User) : Unit {
                 Button(
                     onClick = {
                         if (text != "") {
-                            createPost(u.id, isPublic.value, text)
+                            createEntry(u.id, isPublic.value, text)
                             dialogOpen = true
                             text = ""
                         }
@@ -106,9 +104,7 @@ fun CreatePage(u : User) : Unit {
             dialogOpen = false
         }) {
             Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .wrapContentHeight(),
+                modifier = Modifier.fillMaxWidth().wrapContentHeight(),
                 shape = RoundedCornerShape(size = 10.dp)
             ) {
                 Column(modifier = Modifier.padding(all = 20.dp)) {
@@ -142,10 +138,10 @@ fun RadioButtons(isPublic : MutableState<Boolean>) {
     }
 }
 
-fun createPost (userId : Int, isPublic: Boolean, text : String) : Unit {
+fun createEntry (userId : Int, isPublic: Boolean, text : String) : Unit {
     val sdf = SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss")
     val currentDate = sdf.format(Date())
-    val postNoId = PostWithoutId(
+    val entryNoId = EntryWithoutId(
         iduser = userId,
         posted = currentDate,
         content = text,
@@ -167,8 +163,8 @@ fun createPost (userId : Int, isPublic: Boolean, text : String) : Unit {
         .addConverterFactory(GsonConverterFactory.create())
         .build()
 
-    val api = retrofit.create(PostAPI::class.java)
+    val api = retrofit.create(EntryAPI::class.java)
     CoroutineScope(Dispatchers.IO).launch {
-        val post = api.createPost(postNoId)
+        val entry = api.createEntry(entryNoId)
     }
 }

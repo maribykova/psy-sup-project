@@ -1,5 +1,6 @@
 package com.example.psysupapplication
 
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,6 +22,7 @@ import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -29,6 +31,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -59,6 +62,7 @@ object MyIcons{
     val edit = Icons.Filled.Edit
     val person = Icons.Filled.Person
     val star = Icons.Filled.Star
+    val send = Icons.Filled.Send
 }
 
 data class ProfileInfo(
@@ -68,8 +72,26 @@ data class ProfileInfo(
 )
 
 @Composable
-fun ProfilePage(user : User, userPostsList : MutableState<List<Post>>) : Unit {
-    getUsersPosts(user.id, userPostsList)
+fun ProfilePage(user : User, userEntriesList : MutableState<List<Entry>>) : Unit {
+    val isEditing = remember { mutableStateOf(false) }
+    val isCommenting = remember { mutableStateOf(false) }
+    val currentEntry = remember { mutableStateOf<Entry?>(null) }
+    Crossfade(targetState = isEditing, label = "") { currentSt ->
+        when (currentSt.value) {
+            false -> {
+                if (!isCommenting.value)
+                    Profile(user, userEntriesList, isEditing, isCommenting, currentEntry)
+                else currentEntry.value?.let { CommentPage(it, currentSt, user) }
+            }
+            true -> currentEntry.value?.let { EditPage(it, currentSt) }
+        }
+    }
+}
+
+@Composable
+fun Profile(user : User, userEntriesList : MutableState<List<Entry>>, isEditing : MutableState<Boolean>,
+            isCommenting : MutableState<Boolean>, currentEntry : MutableState<Entry?>) {
+    getUsersEntries(user.id, userEntriesList)
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -105,75 +127,14 @@ fun ProfilePage(user : User, userPostsList : MutableState<List<Post>>) : Unit {
                         .fillMaxWidth()
                 )
             }
-            items(userPostsList.value){post1->
+            items(userEntriesList.value){entry1->
                 Box(
                     modifier = Modifier.padding(vertical = 10.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    PostInProfile(user, post1, Modifier.fillMaxWidth())
+                    EntryView(user, entry1, isEditing, isCommenting, currentEntry, true)
                 }
             }
-        }
-    }
-}
-
-@Composable
-fun PostInProfile(user : User, post : Post, modifier: Modifier) : Unit {
-    Card(
-        modifier = modifier,
-        shape = MaterialTheme.shapes.medium,
-        colors = CardDefaults.cardColors(
-            containerColor = PurpleGrey80
-        )
-    ) {
-        Column (modifier = Modifier.padding(15.dp)){
-            Row {
-                Image(
-                    painter = painterResource(id = R.drawable.default_avatar),
-                    contentDescription = "Default avatar",
-                    modifier = Modifier
-                        .size(42.dp)
-                        .clip(CircleShape)
-                )
-
-                Spacer(modifier = Modifier.width(15.dp))
-
-                Column (
-                    modifier = Modifier
-                        .fillMaxHeight(fraction = 0.8f),
-                    verticalArrangement = Arrangement.SpaceAround
-                ) {
-                    Text(
-                        text = user.username,
-                        color = Color.Black,
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Medium
-                    )
-                    Text(
-                        text = post.posted,
-                        color = Color.Black.copy(alpha = 0.7f),
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium
-                    )
-                    val text : String
-                    if (post.public) text = "Публичный" else text = "Приватный"
-                    Text(
-                        text = text,
-                        color = Color.Black.copy(alpha = 0.7f),
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            Text(
-                text = post.content,
-                color = Color.Black.copy(alpha = 0.7f),
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Medium
-            )
         }
     }
 }
@@ -202,9 +163,7 @@ fun ProfileInfoCard(user : User) {
             Image(
                 painter = painterResource(id = R.drawable.fox),
                 contentDescription = "Default avatar",
-                modifier = Modifier
-                    .size(70.dp)
-                    .clip(CircleShape)
+                modifier = Modifier.size(70.dp).clip(CircleShape)
             )
             Spacer(modifier = Modifier.width(15.dp))
             Text(
@@ -250,8 +209,8 @@ fun ProfileInfoCard(user : User) {
         }
     }
 }
-
-fun getUsersPosts (userId : Int, userPostsList : MutableState<List<Post>>) {
+@Composable
+fun getUsersEntries (userId : Int, userEntriesList : MutableState<List<Entry>>) {
     val interceptor = HttpLoggingInterceptor()
     interceptor.level = HttpLoggingInterceptor.Level.BODY
 
@@ -265,8 +224,11 @@ fun getUsersPosts (userId : Int, userPostsList : MutableState<List<Post>>) {
         .addConverterFactory(GsonConverterFactory.create())
         .build()
 
-    val api = retrofit.create(PostAPI::class.java)
-    CoroutineScope(Dispatchers.IO).launch {
-        userPostsList.value = api.getUserPosts(userId).reversed()
+    val api = retrofit.create(EntryAPI::class.java)
+    LaunchedEffect(Unit) {
+        userEntriesList.value = api.getUserEntries(userId).reversed()
     }
+    /*CoroutineScope(Dispatchers.IO).launch {
+        userEntriesList.value = api.getUserEntries(userId).reversed()
+    }*/
 }

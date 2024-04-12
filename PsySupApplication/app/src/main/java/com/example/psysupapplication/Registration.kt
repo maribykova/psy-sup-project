@@ -1,11 +1,9 @@
 package com.example.psysupapplication
 
-import android.app.Activity
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -18,7 +16,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -27,7 +24,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -104,7 +100,7 @@ fun RegistrationPage(stay : MutableState<Boolean>) : Unit {
             )
             Button(
                 onClick = {
-                    val user1 = UserWithoutId(username, email, phone, password, gender = false, birthday = "2024-01-17", pfp =1, topics = emptyList())
+                    val user1 = UserWithoutId(username, email, phone, password, role="USE", gender=false, birthday="2024-01-17", pfp=1, topics=emptyList())
                     val text = "Вы ввели не все данные!"
                     val duration = Toast.LENGTH_SHORT
 
@@ -128,11 +124,7 @@ fun RegistrationPage(stay : MutableState<Boolean>) : Unit {
     }
 }
 
-
-
 fun createUser (user1 : UserWithoutId) {
-
-    var user : User
     val interceptor = HttpLoggingInterceptor()
     interceptor.level = HttpLoggingInterceptor.Level.BODY
 
@@ -148,6 +140,6 @@ fun createUser (user1 : UserWithoutId) {
 
     val api = retrofit.create(UserAPI::class.java)
     CoroutineScope(Dispatchers.IO).launch {
-        user = api.createUser(user1)
+        val user = api.createUser(user1)
     }
 }

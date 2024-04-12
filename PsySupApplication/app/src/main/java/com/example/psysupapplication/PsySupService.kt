@@ -38,20 +38,38 @@ interface UserAPI {
     ) //: Response<ResponseBody>
 }
 
-interface PostAPI {
-    @GET("posts")
-    suspend fun getAllPosts() : List<Post>
+interface EntryAPI {
+    @GET("entries")
+    suspend fun getAllEntries() : List<Entry>
 
-    @GET("posts/user/{id}")
-    suspend fun getUserPosts(
+    @GET("entries/user/{id}")
+    suspend fun getUserEntries(
         @Path("id") id: Int
-    ) : List<Post>
+    ) : List<Entry>
 
-    @GET("posts/public")
-    suspend fun getPublicPosts() : List<Post>
+    @GET("entries/public")
+    suspend fun getPublicEntries() : List<Entry>
 
-    @POST("posts")
-    suspend fun createPost(
-        @Body noIdPost : PostWithoutId
-    ) : Post
+    @POST("entries")
+    suspend fun createEntry(
+        @Body noIdEntry : EntryWithoutId
+    ) : Entry
+
+    @PUT("entries/{id}")
+    suspend fun updateEntry(
+        @Path("id") id: Int,
+        @Body entry : Entry
+    ) : Entry
+}
+
+interface CommentAPI {
+    @GET("comments/entry/{eid}")
+    suspend fun getEntryComments(
+        @Path("eid") id: Int
+    ) : List<Comment>
+
+    @POST("comments")
+    suspend fun createComment(
+        @Body comment : CommentWithoutId
+    ) : Comment
 }

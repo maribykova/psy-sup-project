@@ -1,5 +1,6 @@
 package com.example.psysupapplication
 
+import android.annotation.SuppressLint
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,6 +15,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -37,31 +39,27 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 @Composable
-fun Enter(stage : MutableState<Boolean>, user : MutableState<User>) {
-    val regist = remember{mutableStateOf(false)}
-    Crossfade(targetState = regist, label = "") { currentSt ->
+fun Enter(stage : MutableState<Boolean>, user : MutableState<User?>) {
+    val registry = remember{mutableStateOf(false)}
+    Crossfade(targetState = registry, label = "") { currentSt ->
         when (currentSt.value) {
-            false -> EnterPage(stage, regist, user)
-            else -> RegistrationPage(regist)
+            false -> EnterPage(stage, registry, user)
+            else -> RegistrationPage(registry)
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EnterPage(stage : MutableState<Boolean>, regist : MutableState<Boolean>, user : MutableState<User>) : Unit {
+fun EnterPage(stage : MutableState<Boolean>, registry : MutableState<Boolean>, user : MutableState<User?>) : Unit {
     var password by rememberSaveable { mutableStateOf("") }
     var nickname by remember { mutableStateOf("") }
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .fillMaxHeight(fraction = 0.7f),
+        modifier = Modifier.fillMaxWidth().fillMaxHeight(fraction = 0.7f),
         contentAlignment = Alignment.Center
     ) {
         Column (
-            modifier = Modifier
-                .fillMaxWidth(fraction = 0.9f)
-                .fillMaxHeight(),
+            modifier = Modifier.fillMaxWidth(fraction = 0.9f).fillMaxHeight(),
             verticalArrangement = Arrangement.SpaceEvenly,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -71,9 +69,7 @@ fun EnterPage(stage : MutableState<Boolean>, regist : MutableState<Boolean>, use
                     fontSize = 44.sp,
                     textAlign = TextAlign.Left,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier
-                        .padding(start = 20.dp)
-                        .fillMaxWidth()
+                    modifier = Modifier.padding(start = 20.dp).fillMaxWidth()
                 )
             }
 
@@ -96,24 +92,17 @@ fun EnterPage(stage : MutableState<Boolean>, regist : MutableState<Boolean>, use
                 horizontalArrangement = Arrangement.Center
             ){
                 Button(
-                    onClick = {
-                        enterUser(user, nickname, password, stage)
-                    },
+                    onClick = { enterUser(user, nickname, password, stage) },
                     modifier = Modifier.fillMaxWidth(fraction = 0.7f)
                 ) {
-                    Text(
-                        text = "Войти",
-                        fontSize = 20.sp
-                    )
+                    Text(text = "Войти", fontSize = 20.sp)
                 }
             }
             Row(
                 horizontalArrangement = Arrangement.Center
             ){
                 Button(
-                    onClick = {
-                        regist.value = true
-                    },
+                    onClick = { registry.value = true },
                     modifier = Modifier.fillMaxWidth(fraction = 0.7f)
                 ) {
                     Text(
@@ -126,8 +115,8 @@ fun EnterPage(stage : MutableState<Boolean>, regist : MutableState<Boolean>, use
     }
 }
 
-
-fun enterUser (user : MutableState<User>, nickname: String, password: String, state: MutableState<Boolean>) {
+@SuppressLint("SuspiciousIndentation")
+fun enterUser (user : MutableState<User?>, nickname: String, password: String, state: MutableState<Boolean>) {
     val interceptor = HttpLoggingInterceptor()
     interceptor.level = HttpLoggingInterceptor.Level.BODY
 
@@ -142,9 +131,19 @@ fun enterUser (user : MutableState<User>, nickname: String, password: String, st
         .build()
 
     val api = retrofit.create(UserAPI::class.java)
+    /*LaunchedEffect(Unit) {
+        user.value = api.getUserByNick(nickname)
+        user.value?.let {
+            if (it.password == password)
+                state.value = true
+        }
+    }*/
+
     CoroutineScope(Dispatchers.IO).launch {
         user.value = api.getUserByNick(nickname)
-        if (user.value.password == password)
+        user.value?.let {
+            if (it.password == password)
             state.value = true
+        }
     }
 }
